@@ -8,21 +8,34 @@
 #include "posture.cpp"
 
 int main(void) {
-  std::vector<float> q,p;
-  p = {0,0,0};
+  Eigen::Vector4d q,p;
+  Eigen::Vector3d o;
+  Eigen::VectorXd stat(7);
+  p = {0,0,0,0};
   q = q0;
-  quaternion quat;
+  o = omega0;
+  PostureEOM eom;
 
   vecs vecs;
   vecs.disp(&p);
 
-  quat.setquat(&q);
-  quat.showquat();
-  p = quat.getquat();
+  eom.state_initialize();
+  if(eom.setstate(&q, &o)){
+    // eom.nextstate();
+    for(int itr = 0; itr < times; itr++){
+      eom.nextstate();
+      if(itr %1000 ==0){
+        std::cout << eom.getstate() << '\n';
+        std::cout << "----" << '\n';
+      }
+    }
+  }
 
   std::cout << "----" << '\n';
+  // std::cout << p << '\n';
+  // std::cout << "----" << '\n';
 
-  vecs.disp(&p);
+  // vecs.disp(&p);
 
   return 0;
 }
