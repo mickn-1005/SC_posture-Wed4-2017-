@@ -15,9 +15,11 @@ int main(void) {
   q = q0;
   qest = {initial(iniest),initial(iniest),initial(iniest),initial(iniest)}; //初期推定値を生成
   qest += q0;
+  // qest.normalize();
   o = omega0;
   oest = {initial(iniest),initial(iniest),initial(iniest)};
   oest += omega0;
+
   PostureEOM eom;   // True motion
   PostureEOM est;   // estimated motion
 
@@ -32,9 +34,9 @@ int main(void) {
       eom.torque();
       est.torque();
       result[itr] = eom.nextstate();
-      if(itr%(int)(0.1/delt)==0){
+      if(itr%(int)(1/delt)==0){
         DCMtrue = eom.getDCM().col(DCMind(indgen));
-        // est.nextstate();
+        est.nextstate();
         estimate[itr] = est.Kalman_observe(DCMtrue);
       }
       else{

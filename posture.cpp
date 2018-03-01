@@ -8,7 +8,7 @@ void PostureEOM::state_initialize(int kaltf, int noisetf, int obs_noitf){
   noisy = noisetf;
   obsnoise = obs_noitf;
   state.resize(7);
-  if(isKalman){
+  if(isKalman==1){
     P.resize(7,7);
     Q.resize(4,4);
     R.resize(3,3);
@@ -122,7 +122,6 @@ Eigen::VectorXd PostureEOM::nextstate(){
   k3 = calcdelstate() * delt;
 
   state = sta0 + 1/6.0 * (k0 + (2-sqrt(2))*k1 + (2+sqrt(2))*k2 + k3);
-  // Qnormal();
   if(isKalman==1){
     Eigen::MatrixXd A = EOSMatA();
     Eigen::MatrixXd B = EOSMatB();
@@ -136,7 +135,7 @@ Eigen::MatrixXd PostureEOM::EOSMatA(){
   Eigen::MatrixXd A(7,7);
   A << 0.0, -0.5*state(4), -0.5*state(5), -0.5*state(6), -0.5*state(1), -0.5*state(2), -0.5*state(3),
        0.5*state(4), 0.0, 0.5*state(6), -0.5*state(5), 0.5*state(0), -0.5*state(3), -0.5*state(2),
-       0.5*state(5), 0.5*state(6), 0.0, 0.5*state(4), 0.5*state(3), 0.5*state(0), 0.5*state(1),
+       0.5*state(5), -0.5*state(6), 0.0, 0.5*state(4), 0.5*state(3), 0.5*state(0), -0.5*state(1),
        0.5*state(6), 0.5*state(5), -0.5*state(4), 0.0, -0.5*state(2), 0.5*state(1), 0.5*state(0),
        0.0,0.0,0.0,0.0, 0.0, (Iy-Iz)*state(6)/Ix, (Iy-Iz)*state(5)/Ix,
        0.0,0.0,0.0,0.0, (Iz-Ix)*state(6)/Iy, 0.0, (Iz-Ix)*state(4)/Iy,
@@ -149,9 +148,9 @@ Eigen::MatrixXd PostureEOM::EOSMatB(){
        0.0,0.0,0.0,
        0.0,0.0,0.0,
        0.0,0.0,0.0,
-       Ix,0.0,0.0,
-       0.0,Iy,0.0,
-       0.0,0.0,Iz;
+       1/Ix,0.0,0.0,
+       0.0,1/Iy,0.0,
+       0.0,0.0,1/Iz;
   return B*delt;
 }
 Eigen::MatrixXd PostureEOM::EOOMatH(int index){
@@ -159,7 +158,7 @@ Eigen::MatrixXd PostureEOM::EOOMatH(int index){
   if(index==0){
     H << 2.0*state(0),2.0*state(1),-2.0*state(2),-2.0*state(3),0.0,0.0,0.0,
          2.0*state(3),2.0*state(2),2.0*state(1),2.0*state(0),0.0,0.0,0.0,
-         2.0*state(2),2.0*state(3),-2.0*state(0),2.0*state(1),0.0,0.0,0.0;
+         -2.0*state(2),2.0*state(3),-2.0*state(0),2.0*state(1),0.0,0.0,0.0;
   }
   else if(index==1){
     H << -2.0*state(3),2.0*state(2),2.0*state(1),-2.0*state(0),0.0,0.0,0.0,
@@ -199,9 +198,7 @@ Eigen::VectorXd PostureEOM::Kalman_observe(Eigen::Vector3d DCMvec){    //input: 
   //観測行列の更新
   P = P - P*H.transpose()*(H*P*H.transpose()+R).inverse()*H*P;
   Eigen::MatrixXd K = P *(H.transpose()*R.inverse());
-
-  state = state + K*(obs_vec - H*state);        //propagation
-  P = (P.inverse() + H.transpose()*(R.inverse()*H)).inverse();
+  state = state + K*obs_vec;        //propagation
   Qnormal();
 
   return state;
@@ -211,9 +208,11 @@ Eigen::MatrixXd PostureEOM::QtoDCM(Eigen::VectorXd Q){
   Eigen::MatrixXd DCM(3,3);
   DCM << std::pow(Q(0), 2.0)+std::pow(Q(1), 2.0)-std::pow(Q(2), 2.0)-std::pow(Q(3), 2.0),
          2.0*(Q(1)*Q(2)-Q(3)*Q(0)), 2.0*(Q(1)*Q(3)+Q(2)*Q(0)),
+
          2.0*(Q(1)*Q(2)+Q(3)*Q(0)),
          std::pow(Q(0), 2.0)-std::pow(Q(1), 2.0)+std::pow(Q(2), 2.0)-std::pow(Q(3), 2.0),
          2.0*(Q(2)*Q(3)-Q(1)*Q(0)),
+
          2.0*(Q(1)*Q(3)-Q(2)*Q(0)), 2.0*(Q(2)*Q(3)+Q(1)*Q(0)),
          std::pow(Q(0), 2.0)-std::pow(Q(1), 2.0)-std::pow(Q(2), 2.0)+std::pow(Q(3), 2.0);
   return DCM;

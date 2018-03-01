@@ -18,8 +18,8 @@ const float Ix = 1.9;   // [kgm^2]
 const float Iy = 1.6;
 const float Iz = 2.0;
 const float omega_s = 17.0*2*3.1415926535/60.0; //[rpm] nominal angular verocity torque (around y axis)
-const float delt = 0.01;   // delta time
-const int times = 10000;   // time steps
+const float delt = 0.001;   // delta time
+const int times = 100000;   // time steps
 
 const int wnoisy = 1;    // 1:random noise to Torque 0: No noise
 const int vnoisy = 1;
@@ -35,7 +35,6 @@ Eigen::Vector3d omega0 = {0.1, omega_s+0.1, 0};
 
 std::random_device seed_gen;
 std::normal_distribution<> dist(mean_noise, conv_noise);    //create white noise
-// std::uniform_real_distribution<double> initial(-1.0, 1.0);
 std::normal_distribution<> initial(mean_noise, conv_noise);    //create white noise
 std::uniform_int_distribution<int> DCMind(0, 2);
 
@@ -68,11 +67,11 @@ class PostureEOM{
     Eigen::MatrixXd R;
 
     Eigen::VectorXd calcdelstate();
-
     Eigen::MatrixXd EOSMatA();
     Eigen::MatrixXd EOSMatB();
     Eigen::MatrixXd EOOMatH(int index);
     int Qnormal();    // Normalize quaternion
+
   public:
     void state_initialize(int kaltf, int noisetf, int obs_noitf);
     int setstate(Eigen::Vector4d *qua, Eigen::Vector3d *ome);  // define quaternion
