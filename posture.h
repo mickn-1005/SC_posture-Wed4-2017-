@@ -34,9 +34,9 @@ Eigen::Vector4d q0 = {1.0,0.0,0.0,0.0};  //initial quaternion  (t = 0)
 Eigen::Vector3d omega0 = {0.1, omega_s+0.1, 0};
 
 std::random_device seed_gen;
-std::normal_distribution<> dist(mean_noise, conv_noise*conv_noise);    //create white noise
+std::normal_distribution<> dist(mean_noise, conv_noise);    //create white noise
 // std::uniform_real_distribution<double> initial(-1.0, 1.0);
-std::normal_distribution<> initial(mean_noise, conv_noise*conv_noise);    //create white noise
+std::normal_distribution<> initial(mean_noise, conv_noise);    //create white noise
 std::uniform_int_distribution<int> DCMind(0, 2);
 
 std::mt19937 vnoise(seed_gen());

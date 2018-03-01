@@ -128,7 +128,7 @@ Eigen::VectorXd PostureEOM::nextstate(){
     Eigen::MatrixXd B = EOSMatB();
     P = A * (P * A.transpose()) + B * (Q * B.transpose());
   }
-  Qnormal();
+  // Qnormal();
   return state;
 }
 
@@ -196,6 +196,8 @@ Eigen::VectorXd PostureEOM::Kalman_observe(Eigen::Vector3d DCMvec){    //input: 
 
   Eigen::Vector3d obs_vec = DCMvec - DCMest.col(minind);    //observed vector z
   Eigen::MatrixXd H = EOOMatH(minind);
+  //観測行列の更新
+  P = P - P*H.transpose()*(H*P*H.transpose()+R).inverse()*H*P;
   Eigen::MatrixXd K = P *(H.transpose()*R.inverse());
 
   state = state + K*(obs_vec - H*state);        //propagation
